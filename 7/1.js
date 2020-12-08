@@ -7,52 +7,49 @@ input.split('\n').forEach(element => {
   
   const split = element.split(' bags contain ')
   
+  graph[split[0]] = {}
+  if(split[1].startsWith('no other bags')) {
+    graph[split[0]] = []
+    return
+  }
+
   graph[split[0]] = split[1]
     .slice(0, split[1].length - 1)
     .split(', ')
     .map(coloredBag => {
-      if (coloredBag === 'no other bags') return null
       tmp = coloredBag.split(' ');
       
       return tmp[1] + ' ' + tmp[2]
     })
 })
 
-function resolveGraph(graph, property) {
-  
-  const obj = {}
-  for (const child of graph[property]) {
-    if (child == undefined) {
-      return null
-    } else if (child === 'shiny gold') {
-      return true
-    } else {
-      
-    obj[child] = resolveGraph(graph, child);
-    }
-  }
-  
-  return obj
-}
+function search(graph, root) {
 
-function hasShinyBag(tree) {
-  if (tree === true) return true
-  for (const child in tree) {
-    if (tree[child] == undefined) continue;
-    if (hasShinyBag(tree[child])) return true
-  }
-  
-  return false
+    let discoveredNodes = {}
+    let queue = []
+
+    discoveredNodes[root] = true;
+
+    queue.push(root);
+
+    while(queue.length !== 0) {
+
+        const search = queue.shift();
+        for (element of graph[search]) {
+
+            if(element === 'shiny gold') return true
+            if (discoveredNodes[element] !== true) {
+                discoveredNodes[element] = true
+    
+                queue.push(element);
+            }
+        }
+    }
 }
 
 let total = 0
-for (const element in graph) {
-  if (element === 'shiny gold') {
-    continue;
-  }
-  if (hasShinyBag(resolveGraph(graph, element))) {
-    total++
-  }
-}
 
+for (element in graph) {
+    if (search(graph, element)) total++
+}
 console.log(total);
